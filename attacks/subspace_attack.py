@@ -15,7 +15,7 @@ def mim_attack(ori_image, eps, iter_num, model, criterion, mu, target, device):
     alpha = eps / iter_num
     image = ori_image.clone().detach().to(device)
     target = target.clone().detach().to(device)
-    softmax = nn.Softmax(dim=0)
+
 
     momentum = torch.zeros_like(image).detach().to(device)
     adv_image = image.clone().detach()
@@ -23,10 +23,7 @@ def mim_attack(ori_image, eps, iter_num, model, criterion, mu, target, device):
     for _ in range(iter_num):
         adv_image.requires_grad = True
         logits = model(adv_image)[0]#正常
-        softmax = softmax_0(logits)
-        log_softmax = torch.log(softmax)
-        # print(softmax)
-        loss = criterion(log_softmax.reshape(1,-1),target)#0
+        loss = criterion(logits.reshape(1,-1),target)#0
 
         # model.zero_grad()
         loss.backward()
@@ -57,7 +54,6 @@ def mim_line_attack(ori_image, eps, iter_num, model, mu, target, beta, criterion
     delta2 = torch.zeros_like(image)
     adv_image1 = (image.clone() + delta1).detach()#image.clone().detach()
     adv_image2 = (image.clone() + delta2).detach()#image.clone().detach()
-    softmax = nn.Softmax(dim=0)
 
 
     for t in range(iter_num):
@@ -70,10 +66,7 @@ def mim_line_attack(ori_image, eps, iter_num, model, mu, target, beta, criterion
         adv_image = gamma*adv_image1 + (1-gamma)*adv_image2
         
         logits = model(adv_image)[0]#正常
-        softmax = softmax_0(logits)
-        log_softmax = torch.log(softmax)
-        # print(softmax)
-        CE = criterion(log_softmax.reshape(1,-1),target)#0
+        CE = criterion(logits.reshape(1,-1),target)#0
         loss = CE - beta * cosine_similarity(delta1, delta2)**2
         # print('loss={:.3f}\tCE={:3f}\tcos={:3f}'.format(loss.item(),CE.item(),(CE.item() - loss.item())))
         loss.backward()
@@ -112,7 +105,6 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
     ORI_image = (image.clone() + Momentum).detach()
     l = range(N)
     # print(ADV_image.shape)
-    softmax_0 = nn.Softmax(dim=0)
     for t in range(iter_num):
     # 集成扰动
     # pdb.set_trace()
@@ -122,10 +114,7 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
         adv_image = (gamma * ADV_image).sum(0)
         
         logits = model(adv_image)[0]#正常
-        softmax = softmax_0(logits)
-        log_softmax = torch.log(softmax)
-        # print(softmax)
-        CE = criterion(log_softmax.reshape(1,-1),target)#0
+        CE = criterion(logits.reshape(1,-1),target)#0
         cosim = 0
         for _ in range(N*(N-1)):
             j, k = sample(l,2) 
@@ -161,7 +150,6 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
     ORI_image = (image.clone() + Momentum).detach()
     l = range(N)
     # print(ADV_image.shape)
-    softmax_0 = nn.Softmax(dim=0)
     for t in range(iter_num):
     # 集成扰动
     # pdb.set_trace()
@@ -171,10 +159,7 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
         adv_image = (gamma * ADV_image).sum(0)
         
         logits = model(adv_image)[0]#正常
-        softmax = softmax_0(logits)
-        log_softmax = torch.log(softmax)
-        # print(softmax)
-        CE = criterion(log_softmax.reshape(1,-1),target)#0
+        CE = criterion(logits.reshape(1,-1),target)#0
         j, k = sample(l,2) 
         adv_image1 = ADV_image[j]
         adv_image2 = ADV_image[k]
@@ -213,7 +198,6 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
     V = torch.zeros_like(image).detach().to(device)
     # 设置参数与初始化
     l = range(N)
-    softmax_0 = nn.Softmax(dim=0)
     for t in range(iter_num):
     # pdb.set_trace()
         ADV_image.requires_grad = True
@@ -222,10 +206,7 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
         adv_image = (gamma * ADV_image).sum(0)
         
         logits = model(adv_image)[0]#正常
-        softmax = softmax_0(logits)
-        log_softmax = torch.log(softmax)
-        # print(softmax)
-        CE = criterion(log_softmax.reshape(1,-1),target)#0
+        CE = criterion(logits.reshape(1,-1),target)#0
         j, k = sample(l,2) 
         adv_image1 = ADV_image[j]
         adv_image2 = ADV_image[k]
@@ -245,10 +226,8 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
                                 torch.randn_like(adv_image).uniform_(-eps * beta_vt, eps * beta_vt)
             neighbor_images.requires_grad = True
             outputs = model(neighbor_images)[0]
-            softmaxs = softmax_0(outputs)
-            log_softmaxs = torch.log(softmaxs)
-            # print(softmax)
-            neighbor_loss = criterion(log_softmaxs.reshape(1,-1),target)
+
+            neighbor_loss = criterion(outputs.reshape(1,-1),target)
             neighbor_loss.backward()
 
             neighbor_grad = neighbor_images.grad.data
@@ -281,7 +260,6 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
     V = torch.zeros_like(ADV_image).detach().to(device)
     # 设置参数与初始化
     l = range(N)
-    softmax_0 = nn.Softmax(dim=0)
     for t in range(iter_num):
     # pdb.set_trace()
         ADV_image.requires_grad = True
@@ -290,10 +268,7 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
         adv_image = (gamma * ADV_image).sum(0)
         
         logits = model(adv_image)[0]#正常
-        softmax = softmax_0(logits)
-        log_softmax = torch.log(softmax)
-        # print(softmax)
-        CE = criterion(log_softmax.reshape(1,-1),target)
+        CE = criterion(logits.reshape(1,-1),target)
         j, k = sample(l,2) 
         adv_image1 = ADV_image[j]
         adv_image2 = ADV_image[k]
@@ -313,10 +288,7 @@ def mim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, criter
                                 torch.randn_like(adv_image).uniform_(-eps * beta_vt, eps * beta_vt)
             neighbor_images.requires_grad = True
             outputs = model(neighbor_images)[0]
-            softmaxs = softmax_0(outputs)
-            log_softmaxs = torch.log(softmaxs)
-            # print(softmax)
-            neighbor_loss = criterion(log_softmaxs.reshape(1,-1),target)
+            neighbor_loss = criterion(outputs.reshape(1,-1),target)
             neighbor_loss.backward()
 
             neighbor_grad = neighbor_images.grad.data
@@ -349,7 +321,6 @@ def vmim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, crite
     V = torch.zeros_like(image).detach().to(device)
     # 设置参数与初始化
     l = range(N)
-    softmax_0 = nn.Softmax(dim=0)
     for t in range(iter_num):
         # pdb.set_trace()
         ADV_image.requires_grad = True
@@ -360,10 +331,7 @@ def vmim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, crite
         adv_image = torch.clamp(adv_image + delta, min=0, max=1)
         
         logits = model(adv_image)[0]#正常
-        softmax = softmax_0(logits)
-        log_softmax = torch.log(softmax)
-        # print(softmax)
-        CE = criterion(log_softmax.reshape(1,-1),target)#0
+        CE = criterion(logits.reshape(1,-1),target)#0
 
         j, k = sample(l,2) 
         adv_image1 = ADV_image[j]
@@ -384,10 +352,7 @@ def vmim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, crite
                                 torch.randn_like(adv_image).uniform_(-eps * beta_vt, eps * beta_vt)
             neighbor_images.requires_grad = True
             outputs = model(neighbor_images)[0]
-            softmaxs = softmax_0(outputs)
-            log_softmaxs = torch.log(softmaxs)
-            # print(softmax)
-            neighbor_loss = criterion(log_softmaxs.reshape(1,-1),target)
+            neighbor_loss = criterion(outputs.reshape(1,-1),target)
             neighbor_loss.backward()
 
             neighbor_grad = neighbor_images.grad.data
@@ -424,7 +389,6 @@ def vnim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, crite
     V = torch.zeros_like(image).detach().to(device)
     # 设置参数与初始化
     l = range(N)
-    softmax_0 = nn.Softmax(dim=0)
     for t in range(iter_num):
         # pdb.set_trace()
         ADV_image.requires_grad = True
@@ -439,10 +403,7 @@ def vnim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, crite
         nes_image = torch.clamp(nes_image + nes_delta, min=0, max=1)
         
         logits = model(nes_image)[0]#正常
-        softmax = softmax_0(logits)
-        log_softmax = torch.log(softmax)
-        # print(softmax)
-        CE = criterion(log_softmax.reshape(1,-1),target)#0
+        CE = criterion(logits.reshape(1,-1),target)#0
 
         j, k = sample(l,2) 
         adv_image1 = ADV_image[j]
@@ -463,10 +424,8 @@ def vnim_simplex_attack(ori_image, eps, iter_num, model, mu, target, beta, crite
                                 torch.randn_like(adv_image).uniform_(-eps * beta_vt, eps * beta_vt)
             neighbor_images.requires_grad = True
             outputs = model(neighbor_images)[0]
-            softmaxs = softmax_0(outputs)
-            log_softmaxs = torch.log(softmaxs)
-            # print(softmax)
-            neighbor_loss = criterion(log_softmaxs.reshape(1,-1),target)
+
+            neighbor_loss = criterion(outputs.reshape(1,-1),target)
             neighbor_loss.backward()
 
             neighbor_grad = neighbor_images.grad.data

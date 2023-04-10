@@ -9,6 +9,7 @@ import time
 import torch.nn.functional as F
 import torch.nn as nn
 import sys
+import numpy as np
 sys.path.append('/data/huangtao/models')
 from torch_nets import (
     tf_inception_v3,
@@ -147,3 +148,17 @@ def get_model(model_name, model_dir):
         model.KitModel(model_path))
     return model
 
+import os
+def create_dir_not_exist(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+def save_img(save_path, img, split_channel=False):
+    img_ = np.array(img * 255).astype('uint8')
+    if split_channel:
+        for i in range(img_.shape[2]):
+            ch_path = save_path + "@channel{}.jpg".format(i)
+            ch = Image.fromarray(img_[:, :, i])
+            ch.save(ch_path)
+    else:
+        Image.fromarray(img_,mode='RGB').save(save_path)

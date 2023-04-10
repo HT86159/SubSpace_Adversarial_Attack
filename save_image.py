@@ -50,21 +50,10 @@ args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args.device % 8)
 
 
-def save_img(save_path, img, split_channel=False):
-    img_ = np.array(img * 255).astype('uint8')
-    if split_channel:
-        for i in range(img_.shape[2]):
-            ch_path = save_path + "@channel{}.jpg".format(i)
-            ch = Image.fromarray(img_[:, :, i])
-            ch.save(ch_path)
-    else:
-        Image.fromarray(img_,mode='RGB').save(save_path)
-
-# save_img(os.path.join(save_path, origin_file[k]), advs[k].detach().permute(1, 2, 0).cpu())
 
 def save_image(test_loader,device,eps,source_model,attack_name,iter_num,beta,decay_factor,N,N_vt,beta_vt):    
     iter = 0
-    criterion = nn.NLLLoss()
+    criterion = nn.CrossEntropyLoss()
     # pdb.set_trace()
     for data,name,target,TargetClass in test_loader:
         # target = target - 1
@@ -76,8 +65,10 @@ def save_image(test_loader,device,eps,source_model,attack_name,iter_num,beta,dec
             perturbed_data=mim_simplex_attack(data,eps,iter_num,source_model,decay_factor,target,beta,criterion,device,N)            
         if attack_name=="mim":
             perturbed_data=mim_attack(data,eps,iter_num,source_model,criterion,decay_factor,target,device)
+        if attack_name=="nim":
+            perturbed_data=nim_attack(data,eps,iter_num,source_model,criterion,decay_factor,target,device)
         if attack_name=="mim_ens":
-            perturbed_data=mim_ens_attack(data,eps,iter_num,source_model,criterion,target,beta,decay_factor,device,Tpt,N)
+            perturbed_data=mim_ens_attack(data,eps,iter_num,source_model,criterion,target,beta,decay_factor,device,N)
         if attack_name=="bim":
             perturbed_data=bim_attack(data,eps,iter_num,source_model,criterion,target,device)
         if attack_name=="vmim":
@@ -99,9 +90,12 @@ def save_image(test_loader,device,eps,source_model,attack_name,iter_num,beta,dec
         if torch.isnan(perturbed_data.max()) or torch.isnan(perturbed_data.min()):
             print("nanerror!!")
             break
-        if iter == 2:
-            break
-        save_img(os.path.join(args.save_image_dir,'adv')+name[0], perturbed_data.reshape(3,299,299).permute(1,2,0).detach().cpu())
+        # if iter == 2:
+        #     break
+        save_img_dir = os.path.join(args.save_image_dir,'{}_from_{},beta={},N={},N_vt={},beta_vt={}'.format(args.attack_name,args.source_model,beta,N,N_vt,beta_vt))
+        create_dir_not_exist(save_img_dir)
+        # print(os.path.join(save_img_dir,'adv')+name[0])
+        save_img(os.path.join(save_img_dir,'adv')+name[0], perturbed_data.reshape(3,299,299).permute(1,2,0).detach().cpu())
     return 
 def main():
     ##输出实验参数设置

@@ -66,3 +66,11 @@ beta=2.0,atk=vnim_simplex_attack,N=10,S=5,n=5,iter_num=10
 ,acc=0.995,resnet_v2_152-->resnet_v2_152
 beta=2.0,atk=vnim,N=10,S=5,n=5,iter_num=10
 ,acc=0.932,resnet_v2_152-->resnet_v2_50
+beta=2.0,atk=mim,N=10,S=5,n=5,iter_num=10
+,acc=0.500,resnet_v2_50-->resnet_v2_50
+beta=2.0,atk=mim,N=10,S=5,n=5,iter_num=10
+,acc=0.500,resnet_v2_50-->resnet_v2_50
+beta=2.0,atk=vmim_simplex_attack,N=10,S=5,n=5,iter_num=10
+,acc=0.500,resnet_v2_50-->resnet_v2_50
+beta=2.0,atk=vmim_simplex_attack,N=10,S=5,n=5,iter_num=10
+,acc=0.900,resnet_v2_50-->resnet_v2_50

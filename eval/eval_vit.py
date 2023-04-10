@@ -53,8 +53,7 @@ def test(test_loader,device,eps,source_model,target_model,attack_name,iter_num,b
     correct = 0
     success = 0
     iter = 0
-    criterion = nn.NLLLoss()
-    softmax_0 = nn.Softmax(dim=0)
+    criterion =  nn.CrossEntropyLoss()
     # pdb.set_trace()
     for data,name,target,TargetClass in test_loader:
         # target = target - 1
@@ -157,7 +156,7 @@ def main():
     clean_dataset = NIPS_GAME(args.input_dir, args.input_csv, preprocess)
     test_loader = torch.utils.data.DataLoader(clean_dataset, batch_size=1, shuffle=False,  pin_memory=True)
     # use cuda
-    device=torch.device('cuda:{}'.format(str(args.device % 4)) if args.use_cuda and torch.cuda.is_available else 'cpu')
+    device=torch.device('cuda:{}'.format(str(args.device % 8)) if args.use_cuda and torch.cuda.is_available else 'cpu')
     # load pretrain_models
     if args.source_model in ['resnet_v2_152','resnet_v2_101','inception_v3',"resnet_v2_50"]:
         source_model = get_model(args.source_model,args.model_dir) 

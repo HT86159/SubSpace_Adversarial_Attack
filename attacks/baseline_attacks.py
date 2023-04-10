@@ -55,7 +55,7 @@ def bim_attack(image,eps,iter_num,model,criterion,target,device):
         delta = torch.clamp(adv_image - image, min=-eps, max=eps)
         image = torch.clamp(image + delta, min=0, max=1).detach()
     return image
-def nim_attack(image, eps, iter_num, model, criterion, mu, target):
+def nim_attack(image, eps, iter_num, model, criterion, mu, target, device):
     alpha = eps/iter_num
     g = 0
     image = image.clone().detach().to(device)
@@ -66,7 +66,7 @@ def nim_attack(image, eps, iter_num, model, criterion, mu, target):
     for t in range(iter_num):
         adv_image.requires_grad = True
         nes_images = adv_image + mu * alpha *momentum
-        output = model(nes_image)
+        output = model(nes_images)
         loss = criterion(output,target)
         model.zero_grad()
         loss.backward()

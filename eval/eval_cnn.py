@@ -54,8 +54,7 @@ def test(test_loader,device,eps,source_model,target_model,attack_name,iter_num,b
     correct = 0
     success = 0
     iter = 0
-    criterion = nn.NLLLoss()
-    softmax_0 = nn.Softmax(dim=0)
+    criterion =  nn.CrossEntropyLoss()
     # pdb.set_trace()
     for data,name,target,TargetClass in test_loader:
         # target = target - 1
@@ -100,8 +99,8 @@ def test(test_loader,device,eps,source_model,target_model,attack_name,iter_num,b
         if torch.isnan(perturbed_data.max()) or torch.isnan(perturbed_data.min()):
             print("nanerror!!")
             break
-        # if iter == 10:
-        #     break
+        if iter == 10:
+            break
         perturbed_output = target_model(perturbed_data)[0]
         perturbed_label=torch.argmax(perturbed_output,axis=0) 
         if perturbed_label.item() == target.item():
@@ -124,7 +123,7 @@ def test(test_loader,device,eps,source_model,target_model,attack_name,iter_num,b
     # acc_frame.to_excel("attack_name={},beta{},N{},N_vt{},beta_vt{}accuracy={:.4f}-output.xlsx".format(attack_name,beta,N,N_vt,beta_vt,accuracy))
 
     end=time.time()
-    print("{},{}->{}beta={},N={},N_vt={},beta_vt={}\t accuracy={:.4f},time:{:.4f}".format(attack_name,args.source_model,args.target_model,beta,N,N_vt,beta_vt,accuracy,end-start))
+    print("{},{}->{}beta={},N={},N_vt={},beta_vt={}\t ASR={:.4f},time:{:.4f}".format(attack_name,args.source_model,args.target_model,beta,N,N_vt,beta_vt,accuracy,end-start))
     return accuracy
 def main():
     ##输出实验参数设置
