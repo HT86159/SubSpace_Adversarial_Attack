@@ -132,10 +132,10 @@ def test(test_loader,device,eps,source_model,target_model,attack_name,iter_num,b
         if args.target_model not in dic:
             dic[args.target_model] = len(dic)+1
         df[dic[args.target_model]][dic[args.source_model]]=accuracy
-        np.savetxt(excel_file, df, fmt='%.01f', delimiter=",")
+        np.savetxt(excel_file, df, fmt='%.03f', delimiter=",")
     else:
         df = np.zeros((10,10))
-        np.savetxt(excel_file, df, fmt='%.01f', delimiter=",")
+        np.savetxt(excel_file, df, fmt='%.03f', delimiter=",")
     end=time.time()
     print("{},{}->{}beta={},N={},N_vt={},beta_vt={}\t accuracy={:.4f},time:{:.4f}".format(attack_name,args.source_model,args.target_model,beta,N,N_vt,beta_vt,accuracy,end-start))
     return accuracy

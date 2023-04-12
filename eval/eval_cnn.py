@@ -14,10 +14,9 @@ import sys
 sys.path.append('..')
 from utils import *
 from attacks.subspace_attack import *
-from attacks.mim_subspace_attack_opt import *
 from attacks.baseline_attacks import *
 import pdb
-
+import timm
 
 parser = argparse.ArgumentParser(description='eval attacks in PyTorch')
 
@@ -59,7 +58,9 @@ def test(test_loader,device,eps,source_model,target_model,attack_name,iter_num,b
     for data,name,target,TargetClass in test_loader:
         # target = target - 1
         iter+=1
-        # print('epoch:{},success:{}'.format(iter,success))
+        if iter == 5:
+            print(">>>>>>>>>>>>>>>>>>>>{}\t{}->{}<<<<<<<<<<<<<<<<<<<<".format(attack_name,args.source_model,args.target_model))
+
         data,target=data.to(device),target.to(device)
         # logits = source_model(data)[0]
         # softmax = softmax_0(logits)
@@ -72,8 +73,6 @@ def test(test_loader,device,eps,source_model,target_model,attack_name,iter_num,b
             perturbed_data=mim_line_attack(data,eps,iter_num,source_model,decay_factor,target,beta,criterion,device)            
         if attack_name=="mim_simplex_attack":
             perturbed_data=mim_simplex_attack(data,eps,iter_num,source_model,decay_factor,target,beta,criterion,device,N)            
-        if attack_name=="mim_simplex_opt":
-            perturbed_data=mim_simplex_opt_attack(data,eps,iter_num,source_model,decay_factor,target,beta,criterion,device,N,lr)            
         if attack_name=="mim":
             perturbed_data=mim_attack(data,eps,iter_num,source_model,criterion,decay_factor,target,device)
         if attack_name=="mim_ens":
@@ -99,10 +98,10 @@ def test(test_loader,device,eps,source_model,target_model,attack_name,iter_num,b
         if torch.isnan(perturbed_data.max()) or torch.isnan(perturbed_data.min()):
             print("nanerror!!")
             break
-        if iter == 10:
-            break
+        # if iter == 10:
+        #     break
         perturbed_output = target_model(perturbed_data)[0]
-        perturbed_label=torch.argmax(perturbed_output,axis=0) 
+        perturbed_label = perturbed_output.argmax() 
         if perturbed_label.item() == target.item():
             correct+=1
             acc_list.append(0)
@@ -144,12 +143,12 @@ def main():
     # use cuda
     device=torch.device('cuda:{}'.format(str(args.device % 8)) if args.use_cuda and torch.cuda.is_available else 'cpu')
     # load pretrain_models
-    if args.source_model in ['resnet_v2_152','resnet_v2_101','inception_v3',"resnet_v2_50"]:
+    if args.source_model in ['resnet_v2_152','resnet_v2_101','inception_v3',"resnet_v2_50","inc_res_v2","adv_inception_v3" ,"ens3_adv_inc_v3", "ens4_adv_inc_v3", "ens_adv_inc_res_v2"]:
         source_model = get_model(args.source_model,args.model_dir) 
     else:
         source_model = torch.nn.Sequential(transforms.Resize(224), transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                                     timm.create_model(args.source_model, pretrained=True))
-    if args.target_model in ['resnet_v2_152','resnet_v2_101','inception_v3',"resnet_v2_50"]:
+    if args.target_model in ['resnet_v2_152','resnet_v2_101','inception_v3',"resnet_v2_50","inc_res_v2","adv_inception_v3" ,"ens3_adv_inc_v3", "ens4_adv_inc_v3", "ens_adv_inc_res_v2"]:
         target_model = get_model(args.target_model,args.model_dir) 
     else:
         target_model = torch.nn.Sequential(transforms.Resize(224), transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
