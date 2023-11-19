@@ -24,6 +24,10 @@ from torch_nets import (
     tf_ens4_adv_inc_v3,
     tf_ens_adv_inc_res_v2,
     )
+import timm
+from scipy import stats as st
+from torchvision import models
+
 log_offset = 1e-20
 det_offset = 1e-6
 softmax_0 = nn.Softmax(dim=0)
@@ -133,31 +137,60 @@ class Normalize(nn.Module):
                 x[:, i] = (x[:, i] - self.mean[i]) / self.std[i]
         return x
 
-def get_model(model_name, model_dir):
-    model_path = os.path.join(model_dir,'tf_'+ model_name + '.npy')
-
-    if model_name=="resnet_v2_101":
-        model = tf_resnet_v2_101
-    elif model_name=="resnet_v2_50":
-        model = tf_resnet_v2_50
-    elif model_name=="resnet_v2_152":
-        model = tf_resnet_v2_152
-    elif model_name=="inception_v3":
-        model = tf_inception_v3
-    elif model_name == 'inc_res_v2':
-        model = tf_inc_res_v2
-    elif model_name == 'adv_inception_v3':
-        model = tf_adv_inception_v3
-    elif model_name == 'ens3_adv_inc_v3':
-        model = tf_ens3_adv_inc_v3
-    elif model_name == 'ens4_adv_inc_v3':
-        model = tf_ens4_adv_inc_v3
-    elif model_name == 'ens_adv_inc_res_v2':
-        model = tf_ens_adv_inc_res_v2
-    model = nn.Sequential(
-        Normalize('tensorflow'), 
-        model.KitModel(model_path))
+def get_torch_models(model_name):
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+    if model_name == "vgg16":
+        # model=torch.nn.Sequential(normalize,models.vgg16(weights='VGG16_Weights.DEFAULT'))
+        model=torch.nn.Sequential(normalize,models.vgg16_bn(pretrained=True))
+    if model_name == "dense121":
+        # model=torch.nn.Sequential(normalize,models.densenet121(weights="DenseNet121_Weights.DEFAULT"))
+        model=torch.nn.Sequential(normalize,models.densenet121(pretrained=True))
+    if model_name == "resnet50":
+        model=torch.nn.Sequential(normalize,models.resnet50(pretrained=True))
     return model
+
+def get_vit_models(model_name):
+
+    model = torch.nn.Sequential(transforms.Resize(224), transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                            timm.create_model(model_name, pretrained=True))
+    return model
+
+
+def get_model(model_name, model_dir):
+    if model_name in ["vgg16", "dense121","resnet50"]:
+        model = get_torch_models(model_name)
+        is_tf_model = False
+    elif "it" in model_name:
+        model = get_vit_models(model_name)
+        is_tf_model = False
+    else :
+        model_path = os.path.join(model_dir,'tf_'+ model_name + '.npy')
+        if model_name=="resnet_v2_101":
+            model = tf_resnet_v2_101
+        elif model_name=="resnet_v2_50":
+            model = tf_resnet_v2_50
+        elif model_name=="resnet_v2_152":
+            model = tf_resnet_v2_152
+        elif model_name=="inception_v3":
+            model = tf_inception_v3
+        elif model_name=="inception_v4":
+            model = tf_inception_v4
+        elif model_name == 'inc_res_v2':
+            model = tf_inc_res_v2
+        elif model_name == 'adv_inception_v3':
+            model = tf_adv_inception_v3
+        elif model_name == 'ens3_adv_inc_v3':
+            model = tf_ens3_adv_inc_v3
+        elif model_name == 'ens4_adv_inc_v3':
+            model = tf_ens4_adv_inc_v3
+        elif model_name == 'ens_adv_inc_res_v2':
+            model = tf_ens_adv_inc_res_v2
+        model = nn.Sequential(
+            Normalize('tensorflow'),
+            model.KitModel(model_path))
+        is_tf_model = True
+    return model ,is_tf_model
 
 def create_dir_not_exist(path):
     if not os.path.exists(path):

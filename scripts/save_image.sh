@@ -1,4 +1,4 @@
-device=3
+device=4
 beta_list=(2)
 # 2 2 2 2)
 lr_list=(0.000005)
@@ -6,10 +6,10 @@ iter_num_list=(10)
 N_list=(10)
 N_vt_list=(20)
 beta_vt_list=(1.5)
-attack_name_list=('nim')
+attack_name_list=("ct_vmim")
 #'mim_sub_line')
-source_model_list=("resnet_v2_152")
-#  'resnet_v2_152' 'resnet_v2_101' 'inception_v3'  "resnet_v2_50" 
+source_model_list=('inception_v3,resnet_v2_50,resnet_v2_152,inc_res_v2')
+#  'resnet_v2_152' 'resnet_v2_101' 'inception_v3'  "resnet_v2_50" "inc_res_v2"
 target_model_list=('resnet_v2_152')
 for source_model in ${source_model_list[@]}
 do
